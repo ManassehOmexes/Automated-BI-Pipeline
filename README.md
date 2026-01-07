@@ -25,11 +25,11 @@ Dieses Projekt entwickelt eine vollautomatische BI-Pipeline, die:
 ## Projektstruktur
 
 automated-bi-pipeline/
-├── src/              # Produktionscode
-├── tests/            # Unit und Integration Tests
-├── docker/           # Docker Konfigurationen
-├── notebooks/        # Jupyter Notebooks für Exploration
-└── docs/             # Dokumentation
+src/              # Produktionscode
+tests/            # Unit und Integration Tests
+docker/           # Docker Konfigurationen
+notebooks/        # Jupyter Notebooks für Exploration
+docs/             # Dokumentation
 
 ## Status
 
@@ -37,4 +37,4 @@ In Entwicklung. Projektstart: Januar 2026
 
 ## Autor
 
-[Dein Name]
+ManassehOmexes
