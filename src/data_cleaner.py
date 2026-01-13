@@ -47,7 +47,10 @@ class DataCleaner:
     
     def handle_missing_values(self) -> Optional[pd.DataFrame]:
         """
-        Behandelt fehlende Werte im DataFrame.
+        Behandelt fehlende Werte im DataFrame mit intelligenter Strategie.
+        - Numerische Spalten: Füllen mit Median
+        - Kategorische Spalten: Füllen mit Mode oder "Unknown"
+        - Kritische Spalten mit >50% fehlenden Werten: Warnung
         
         Returns:
             DataFrame mit behandelten fehlenden Werten oder None bei Fehler
@@ -58,15 +61,48 @@ class DataCleaner:
             return None
         
         try:
-            # Zeige an, wie viele fehlende Werte es gibt
-            missing_before = self.data.isnull().sum().sum()
-            print(f"Fehlende Werte vorher: {missing_before}")
+            # Analyse der fehlenden Werte
+            missing_count = self.data.isnull().sum()
+            total_rows = len(self.data)
+            missing_percent = (missing_count / total_rows) * 100
             
-            # Entferne Zeilen mit fehlenden Werten
-            self.data = self.data.dropna()
+            print("\n=== Analyse fehlender Werte ===")
+            for col in self.data.columns:
+                if missing_count[col] > 0:
+                    print(f"{col}: {missing_count[col]} ({missing_percent[col]:.2f}%)")
             
-            missing_after = self.data.isnull().sum().sum()
-            print(f"✓ Fehlende Werte nachher: {missing_after}")
+            # Warnung bei Spalten mit >50% fehlenden Werten
+            critical_cols = missing_percent[missing_percent > 50]
+            if len(critical_cols) > 0:
+                print("\n⚠️  Warnung: Diese Spalten haben >50% fehlende Werte:")
+                for col in critical_cols.index:
+                    print(f"  - {col}: {critical_cols[col]:.2f}%")
+            
+            print("\n=== Behandlung fehlender Werte ===")
+            
+            # Numerische Spalten: Mit Median füllen
+            numeric_cols = self.data.select_dtypes(include=['number']).columns
+            for col in numeric_cols:
+                if missing_count[col] > 0:
+                    median_value = self.data[col].median()
+                    self.data[col].fillna(median_value, inplace=True)
+                    print(f"✓ {col} (numerisch): Gefüllt mit Median ({median_value:.2f})")
+            
+            # Kategorische Spalten: Mit Mode oder "Unknown" füllen
+            categorical_cols = self.data.select_dtypes(include=['object']).columns
+            for col in categorical_cols:
+                if missing_count[col] > 0:
+                    if not self.data[col].mode().empty:
+                        mode_value = self.data[col].mode()[0]
+                        self.data[col].fillna(mode_value, inplace=True)
+                        print(f"✓ {col} (kategorisch): Gefüllt mit Mode ('{mode_value}')")
+                    else:
+                        self.data[col].fillna("Unknown", inplace=True)
+                        print(f"✓ {col} (kategorisch): Gefüllt mit 'Unknown'")
+            
+            # Finale Prüfung
+            remaining_missing = self.data.isnull().sum().sum()
+            print(f"\n✓ Behandlung abgeschlossen. Verbleibende fehlende Werte: {remaining_missing}")
             print(f"  Verbleibende Zeilen: {len(self.data)}")
             
             return self.data
