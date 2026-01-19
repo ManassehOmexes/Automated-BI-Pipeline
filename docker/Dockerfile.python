@@ -1,0 +1,22 @@
+# Basis-Image: Python 3.11 Slim (kleiner als standard Python)
+FROM python:3.11-slim
+
+# Arbeitsverzeichnis im Container festlegen
+WORKDIR /app
+
+# Requirements-Datei kopieren
+COPY requirements.txt .
+
+# Dependencies installieren
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Projekt-Code kopieren
+COPY src/ ./src/
+COPY data/ ./data/
+COPY main.py .
+
+# Umgebungsvariablen setzen (Python-Output direkt anzeigen)
+ENV PYTHONUNBUFFERED=1
+
+# Standard-Befehl beim Container-Start
+CMD ["python", "main.py"]
