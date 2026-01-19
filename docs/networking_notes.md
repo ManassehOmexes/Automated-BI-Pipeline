@@ -6,3 +6,10 @@
 - HTTP vs HTTPS (immer HTTPS für sensible Daten)
 - API-Calls mit curl
 - localhost vs 0.0.0.0 (wichtig für Docker)
+
+Docker
+
+- Docker Desktop installiert
+- Ersten Container: hello-world
+- Python Container: python:3.11
+- Grundlegende Befehle: docker run, ps, logs, rm
