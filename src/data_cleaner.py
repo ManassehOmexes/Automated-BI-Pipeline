@@ -215,3 +215,24 @@ class DataCleaner:
         except Exception as e:
             self.logger.error(f"Fehler beim Korrigieren der Datentypen: {type(e).__name__}: {str(e)}")
             return None
+        
+    def save_to_database(self, df: pd.DataFrame, table_name: str = "cleaned_sales") -> None:
+        """
+        Speichert bereinigte Daten in PostgreSQL
+        
+        Args:
+        df: Bereinigter DataFrame
+        table_name: Name der Zieltabelle
+        """
+        try:  
+            from src.db_connector import DatabaseConnector
+            
+            db = DatabaseConnector()
+            db.save_dataframe(df, table_name, if_exists='replace')
+            db.close()
+            
+            self.logger.info(f"Daten erfolgreich in Tabelle '{table_name}' gespeichert")
+            
+        except Exception as e:
+            self.logger.error(f"Fehler beim Speichern in Datenbank: {e}")
+            raise
