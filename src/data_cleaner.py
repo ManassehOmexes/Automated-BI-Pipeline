@@ -236,3 +236,40 @@ class DataCleaner:
         except Exception as e:
             self.logger.error(f"Fehler beim Speichern in Datenbank: {e}")
             raise
+
+    def upsert_to_database(
+        self, 
+        df: pd.DataFrame, 
+        table_name: str = "sales_final",
+        conflict_columns: list = None
+    ) -> None:
+        """
+        Upsert bereinigte Daten in PostgreSQL (idempotent)
+        
+        Args:
+            df: Bereinigter DataFrame
+            table_name: Name der Zieltabelle
+            conflict_columns: Spalten für Unique Constraint
+        """
+        try:
+            from src.db_connector import DatabaseConnector
+            
+            # Default Conflict Columns
+            if conflict_columns is None:
+                conflict_columns = ['InvoiceNo', 'StockCode']
+            
+            # TotalPrice berechnen (falls nicht vorhanden)
+            if 'TotalPrice' not in df.columns:
+                df['TotalPrice'] = df['Quantity'] * df['UnitPrice']
+            
+            db = DatabaseConnector()
+            db.upsert_dataframe(df, table_name, conflict_columns)
+            db.close()
+            
+            self.logger.info(
+                f"Daten erfolgreich per Upsert in '{table_name}' gespeichert"
+            )
+            
+        except Exception as e:
+            self.logger.error(f"Fehler beim Upsert in Datenbank: {e}")
+            raise

@@ -20,7 +20,12 @@ cleaner.correct_datatypes()
 print("\nErste 5 Zeilen der bereinigten Daten:")
 print(cleaner.data.head())
 
-# NEU für Tag 17: In Datenbank speichern
-cleaner.save_to_database(cleaner.data, table_name="retail")
+# Upsert statt replace (idempotent!)
+cleaner.upsert_to_database(
+    cleaner.data, 
+    table_name="sales_final",
+    conflict_columns=['InvoiceNo', 'StockCode']
+)
 
-print("\nPipeline erfolgreich! Daten in PostgreSQL gespeichert.")
+print("\nPipeline erfolgreich! Daten per Upsert in PostgreSQL gespeichert.")
+print("Kann mehrfach ausgeführt werden ohne Duplikate!")
