@@ -1,40 +1,34 @@
 import os
 from typing import Optional
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Table, MetaData
 from sqlalchemy.engine import Engine
 import logging
+from src.logger import setup_logger
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+from sqlalchemy.exc import OperationalError
 
 class DatabaseConnector:
     """Verwaltet Datenbankverbindungen mit SQLAlchemy"""
     
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
+        self.logger = setup_logger(__name__)
         self.engine: Optional[Engine] = None
         self._connect()
-    
+      
     def _connect(self) -> None:
-        """Erstellt SQLAlchemy Engine"""
+        """Liest Credentials und erstellt SQLAlchemy Engine"""
         try:
             # Connection String aus Environment Variables
-            db_host = os.getenv("DATABASE_HOST", "localhost")
-            db_port = os.getenv("DATABASE_PORT", "5432")
-            db_name = os.getenv("DATABASE_NAME", "bi_pipeline")
-            db_user = os.getenv("DATABASE_USER", "admin")
-            db_password = os.getenv("DATABASE_PASSWORD", "secret")
+            self.host = os.getenv("DATABASE_HOST", "localhost")
+            self.port = os.getenv("DATABASE_PORT", "5432")
+            self.database = os.getenv("DATABASE_NAME", "bi_pipeline")
+            self.user = os.getenv("DATABASE_USER", "admin")
+            self.password = os.getenv("DATABASE_PASSWORD", "secret")
             
-            # PostgreSQL Connection String
-            connection_string = (
-                f"postgresql://{db_user}:{db_password}"
-                f"@{db_host}:{db_port}/{db_name}"
-            )
-            
-            self.engine = create_engine(connection_string)
-            
-            # Test Connection
-            with self.engine.connect() as conn:
-                result = conn.execute(text("SELECT 1"))
-                self.logger.info("Datenbankverbindung erfolgreich hergestellt")
+            # Engine mit Retry erstellen
+            self.engine = self._create_engine_with_retry()
                 
         except Exception as e:
             self.logger.error(f"Fehler bei Datenbankverbindung: {e}")
@@ -137,6 +131,31 @@ class DatabaseConnector:
             self.logger.error(f"Fehler beim Upsert: {e}")
             raise
     
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type(OperationalError),
+        reraise=True
+    )
+    def _create_engine_with_retry(self):
+        """Erstellt SQLAlchemy Engine mit Retry-Logik"""
+        self.logger.info("Datenbankverbindung wird hergestellt...")
+
+        connection_string = (
+            f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+        )
+
+        # Engine erstellen
+        engine = create_engine(connection_string)
+
+        # Verbindung testen
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+
+        self.logger.info("Datenbankverbindung erfolgreich!")
+
+        return engine
+            
     def execute_query(self, query: str) -> pd.DataFrame:
         """
         Führt SQL Query aus und gibt DataFrame zurück
