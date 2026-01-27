@@ -1,8 +1,13 @@
 from dotenv import load_dotenv
 from src.data_cleaner import DataCleaner
+from src.logger import setup_json_logger
 
 # Environment Variables laden
 load_dotenv()
+
+# Logger erstellen (DAS FEHLTE!)
+logger = setup_json_logger(__name__)
+logger.info("Pipeline gestartet")
 
 # DataCleaner-Objekt erstellen
 cleaner = DataCleaner("data/online_retail.csv")
@@ -21,11 +26,13 @@ print("\nErste 5 Zeilen der bereinigten Daten:")
 print(cleaner.data.head())
 
 # Upsert statt replace (idempotent!)
+logger.info("Starte Upsert in Datenbank")
 cleaner.upsert_to_database(
     cleaner.data, 
     table_name="sales_final",
     conflict_columns=['InvoiceNo', 'StockCode']
 )
 
+logger.info("Pipeline erfolgreich abgeschlossen")
 print("\nPipeline erfolgreich! Daten per Upsert in PostgreSQL gespeichert.")
 print("Kann mehrfach ausgeführt werden ohne Duplikate!")

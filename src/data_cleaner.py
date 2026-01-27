@@ -1,6 +1,6 @@
 from typing import Optional
 import pandas as pd
-from src.logger import setup_logger
+from src.logger import setup_logger, setup_json_logger
 
 
 class DataCleaner:

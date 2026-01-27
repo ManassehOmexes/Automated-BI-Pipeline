@@ -1,6 +1,7 @@
 import logging
 import sys
 from typing import Optional
+from pythonjsonlogger import jsonlogger
 
 
 def setup_logger(
@@ -47,3 +48,42 @@ def setup_logger(
         logger.addHandler(file_handler)
     
     return logger
+
+def setup_json_logger(
+        name: str,
+        level: int = logging.INFO, 
+        log_file: Optional[str] = None  
+        ) -> logging.Logger:
+    
+    """
+    Erstellt Logger mit JSON-Format (für Production/Monitoring)
+    """
+
+    # Logger erstellen
+    json_logger = logging.getLogger(name)
+    json_logger.setLevel(level)
+
+    # Verhindere doppelte Handler
+    if json_logger.handlers: 
+        return json_logger
+    
+    # Json Formatter erstellen
+    json_formatter = jsonlogger.JsonFormatter(
+        fmt='%(asctime)s %(name)s %(levelname)s %(message)s',
+        rename_fields={"asctime": "timestamp"}
+    )
+
+    # Console Handler mit JSON Formatter
+    json_console_handler = logging.StreamHandler(sys.stdout)
+    json_console_handler.setLevel(level)
+    json_console_handler.setFormatter(json_formatter)
+    json_logger.addHandler(json_console_handler)
+
+    # Optional Handler mit JSON Formatter 
+    if log_file:
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setLevel(level)
+        file_handler.setFormatter(json_formatter)
+        json_logger.addHandler(file_handler)
+
+    return json_logger

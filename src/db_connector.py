@@ -4,7 +4,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text, Table, MetaData
 from sqlalchemy.engine import Engine
 import logging
-from src.logger import setup_logger
+from src.logger import setup_logger, setup_json_logger
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from sqlalchemy.exc import OperationalError
@@ -13,7 +13,7 @@ class DatabaseConnector:
     """Verwaltet Datenbankverbindungen mit SQLAlchemy"""
     
     def __init__(self):
-        self.logger = setup_logger(__name__)
+        self.logger = setup_json_logger(__name__)  # ← Test JSON logging!
         self.engine: Optional[Engine] = None
         self._connect()
       
@@ -94,7 +94,7 @@ class DatabaseConnector:
             records = df.to_dict('records')
             total = len(records)
             
-            self.logger.info(f"Starte Upsert für {total} Zeilen in '{table_name}'")
+            self.logger.info(f"Starte Upsert fuer {total} Zeilen in '{table_name}'")
             
             # ZEILE FÜR ZEILE (robusteste Methode)
             with self.engine.connect() as conn:
@@ -125,8 +125,14 @@ class DatabaseConnector:
                 # Final Commit
                 conn.commit()
             
-            self.logger.info(f"Upsert abgeschlossen: {total} Zeilen")
-            
+            self.logger.info(
+                             "Upsert abgeschlossen",
+                             extra={
+                                 "rows_total": total,
+                                 "table_name": table_name
+                             }
+            )
+
         except Exception as e:
             self.logger.error(f"Fehler beim Upsert: {e}")
             raise
