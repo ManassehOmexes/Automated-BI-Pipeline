@@ -1,16 +1,15 @@
-from dotenv import load_dotenv
 from src.data_cleaner import DataCleaner
-from src.logger import setup_json_logger
+from src.logger import get_logger
+from src.config import AppConfig
 
-# Environment Variables laden
-load_dotenv()
+
 
 # Logger erstellen (DAS FEHLTE!)
-logger = setup_json_logger(__name__)
+logger = get_logger(__name__)
 logger.info("Pipeline gestartet")
 
 # DataCleaner-Objekt erstellen
-cleaner = DataCleaner("data/online_retail.csv")
+cleaner = DataCleaner(AppConfig.DATA_PATH)
 
 # Daten laden
 cleaner.load_data()

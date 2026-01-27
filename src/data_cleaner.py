@@ -1,7 +1,6 @@
 from typing import Optional
 import pandas as pd
-from src.logger import setup_logger, setup_json_logger
-
+from src.logger import get_logger
 
 class DataCleaner:
     """
@@ -17,7 +16,7 @@ class DataCleaner:
         """
         self.filepath = filepath
         self.data: Optional[pd.DataFrame] = None
-        self.logger = setup_logger(__name__)
+        self.logger = get_logger(__name__)
     
     def load_data(self) -> Optional[pd.DataFrame]:
         """
@@ -89,7 +88,7 @@ class DataCleaner:
                 if missing_count[col] > 0:
                     median_value = self.data[col].median()
                     self.data[col].fillna(median_value, inplace=True)
-                    self.logger.info(f"{col} (numerisch): Gefüllt mit Median ({median_value:.2f})")
+                    self.logger.info(f"{col} (numerisch): Gefuellt mit Median ({median_value:.2f})")
             
             # Kategorische Spalten: Mit Mode oder "Unknown" füllen
             categorical_cols = self.data.select_dtypes(include=['object']).columns
@@ -98,10 +97,10 @@ class DataCleaner:
                     if not self.data[col].mode().empty:
                         mode_value = self.data[col].mode()[0]
                         self.data[col].fillna(mode_value, inplace=True)
-                        self.logger.info(f"{col} (kategorisch): Gefüllt mit Mode ('{mode_value}')")
+                        self.logger.info(f"{col} (kategorisch): Gefuellt mit Mode ('{mode_value}')")
                     else:
                         self.data[col].fillna("Unknown", inplace=True)
-                        self.logger.info(f"{col} (kategorisch): Gefüllt mit 'Unknown'")
+                        self.logger.info(f"{col} (kategorisch): Gefuellt mit 'Unknown'")
             
             # Finale Prüfung
             remaining_missing = self.data.isnull().sum().sum()

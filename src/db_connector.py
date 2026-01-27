@@ -4,16 +4,16 @@ import pandas as pd
 from sqlalchemy import create_engine, text, Table, MetaData
 from sqlalchemy.engine import Engine
 import logging
-from src.logger import setup_logger, setup_json_logger
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-
 from sqlalchemy.exc import OperationalError
+from src.config import DatabaseConfig
+from src.logger import get_logger
 
 class DatabaseConnector:
     """Verwaltet Datenbankverbindungen mit SQLAlchemy"""
     
     def __init__(self):
-        self.logger = setup_json_logger(__name__)  # ← Test JSON logging!
+        self.logger = get_logger(__name__)  # ← Test JSON logging!
         self.engine: Optional[Engine] = None
         self._connect()
       
@@ -21,12 +21,12 @@ class DatabaseConnector:
         """Liest Credentials und erstellt SQLAlchemy Engine"""
         try:
             # Connection String aus Environment Variables
-            self.host = os.getenv("DATABASE_HOST", "localhost")
-            self.port = os.getenv("DATABASE_PORT", "5432")
-            self.database = os.getenv("DATABASE_NAME", "bi_pipeline")
-            self.user = os.getenv("DATABASE_USER", "admin")
-            self.password = os.getenv("DATABASE_PASSWORD", "secret")
-            
+            self.host = DatabaseConfig.HOST
+            self.port = DatabaseConfig.PORT
+            self.database = DatabaseConfig.NAME
+            self.user = DatabaseConfig.USER
+            self.password = DatabaseConfig.PASSWORD
+
             # Engine mit Retry erstellen
             self.engine = self._create_engine_with_retry()
                 

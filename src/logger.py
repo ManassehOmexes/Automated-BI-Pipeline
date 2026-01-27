@@ -2,6 +2,7 @@ import logging
 import sys
 from typing import Optional
 from pythonjsonlogger import jsonlogger
+from src.config import LoggingConfig
 
 
 def setup_logger(
@@ -87,3 +88,19 @@ def setup_json_logger(
         json_logger.addHandler(file_handler)
 
     return json_logger
+
+def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
+    """
+    Gibt Logger zurück basierend auf LOG_FORMAT Environment Variable.
+    
+    LOG_FORMAT=json  → JSON-Logging (Production)
+    LOG_FORMAT=text  → Text-Logging (Development)
+    """
+    from src.config import LoggingConfig
+
+    log_format = LoggingConfig.FORMAT.lower()
+
+    if log_format == "json":
+        return setup_json_logger(name, level)
+    else: 
+        return setup_logger(name, level)

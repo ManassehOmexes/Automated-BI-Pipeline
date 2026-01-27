@@ -1,16 +1,27 @@
 import os
 from dotenv import load_dotenv
+from dataclasses import dataclass
 
 # .env Datei laden
 load_dotenv()
 
-# Datenbankeinstellungen aus Umgebungsvariablen laden
-DATABASE_HOST = os.getenv("DATABASE_HOST")
-DATABASE_PORT = os.getenv("DATABASE_PORT")
-DATABASE_NAME = os.getenv("DATABASE_NAME")
-DATABASE_USER = os.getenv("DATABASE_USER")
-DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
+# Config-Klassen mit @dataclass
+@dataclass
+class DatabaseConfig: 
+    """Database connection configuration"""
+    HOST: str = os.getenv("DATABASE_HOST", "localhost")
+    PORT: int = int(os.getenv("DATABASE_PORT", "5432"))
+    NAME: str =  os.getenv("DATABASE_NAME", "bi_pipeline")
+    USER : str = os.getenv("DATABASE_USER", "admin")
+    PASSWORD: str =  os.getenv("DATABASE_PASSWORD", "secret")
 
-# Optional: Validierung, dass alle Werte gesetzt sind
-if not all([DATABASE_HOST, DATABASE_PORT, DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD]):
-    raise ValueError("Nicht alle erforderlichen Umgebungsvariablen sind gesetzt. Prüfe deine .env Datei.")
+@dataclass
+class LoggingConfig: 
+    """Logging configuration"""
+    FORMAT: str =  os.getenv("LOG_FORMAT", "text")
+    LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+
+@dataclass
+class AppConfig:
+    """Application configuration"""  
+    DATA_PATH: str = os.getenv("DATA_PATH", "data/online_retail.csv")
