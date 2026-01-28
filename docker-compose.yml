@@ -38,5 +38,6 @@ services:
       - ./src:/app/src
       - ./data:/app/data
       - ./pyproject.toml:/app/pyproject.toml 
+      - ./tests:/app/tests 
 volumes:
   postgres_data:
