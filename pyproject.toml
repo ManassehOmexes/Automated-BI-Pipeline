@@ -1,0 +1,32 @@
+[tool.black]
+line-length = 120
+target-version = ['py311']
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | __pycache__
+)/
+'''
+
+[tool.pylint.main]
+max-line-length = 120
+ignore-patterns = ["test_.*?.py", "conftest.py"]
+
+[tool.pylint.messages_control]
+disable = [
+    "C0103",  # invalid-name (für Config Konstanten wie HOST, PORT)
+    "W1203",  # logging-fstring-interpolation (f-strings in logs ok für uns)
+    "C0415",  # import-outside-toplevel (manchmal nötig)
+    "R0913",  # too-many-arguments (für Data Engineering ok)
+    "R0914",  # too-many-locals (für komplexe Funktionen ok)
+    "W0718",  # ← NEU: broad-exception-caught
+    "R0912",  # ← NEU: too-many-branches
+    "R0915",  # ← NEU: too-many-statements
+]
+
+[tool.pylint.design]
+max-args = 7
+max-locals = 20
+max-branches = 15
+max-statements = 60
